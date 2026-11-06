@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tool-dev-hirekit"
+version = "0.1.0"
+description = "Evidence-first application kit Executa for HireKit"
+requires-python = ">=3.10"
+dependencies = ["pydantic>=2.7,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+"tool-dev-hirekit" = "hirekit_plugin:main"
+
+[tool.setuptools]
+py-modules = ["hirekit_plugin"]
+packages = ["hirekit"]
+
+[tool.setuptools.package-data]
+hirekit = ["taxonomy/*.json", "prompts/*.txt"]

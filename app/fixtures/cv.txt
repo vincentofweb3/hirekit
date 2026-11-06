@@ -1,0 +1,7 @@
+Jane Doe
+jane@example.com
+github.com/janedoe
+
+Projects
+- Built a Python API with Django and PostgreSQL for a campus course, handling 500 requests per day.
+- Led a team of 3 students to ship a React dashboard.

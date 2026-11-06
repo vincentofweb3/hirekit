@@ -1,0 +1,3 @@
+Backend Intern
+Acme
+We require Python and Kubernetes. SQL is a nice to have.

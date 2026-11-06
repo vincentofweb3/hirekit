@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.anna/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.DS_Store
+artifacts/

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HireKit prototype</title>
+<script>
+/* ===== EDIT SAMPLE CONTENT HERE. Every screen renders from this one object. ===== */
+window.SAMPLE={
+ job:{title:"Junior Backend Engineer",company:"Northwind Payments",track:"Backend",level:"Junior",
+  text:"Northwind Payments builds payment APIs for African merchants.\nYou will:\n- Build and maintain REST APIs in Node.js or Python\n- Design PostgreSQL schemas and tune slow queries\n- Ship with Docker and CI/CD\n- Write unit and integration tests\nNice to have: Kafka or RabbitMQ, AWS or GCP."},
+ cv:"Ada Eze | github.com/adaeze | Final-year Computer Science\nProjects\nCampus Marketplace API (Node.js, Express, PostgreSQL, Jest, Docker, GitHub Actions): 9-table schema, 74% test coverage, deployed on a free-tier VPS.\nExperience\nBackend intern, a logistics startup: built delivery-status endpoints in Express.",
+ score:78,keywords:{found:["Node.js","REST","PostgreSQL","Docker","CI/CD","Jest","Express","Git","GitHub Actions"],missing:["Kafka","AWS","GCP"]},
+ summary:"Good fit. Your marketplace API covers most must-haves. Query tuning and message queues are the gaps that matter.",
+ reqs:[
+  {t:"Build REST APIs in Node.js or Python",s:"pass",must:1,ev:["proj_1","exp_1"]},
+  {t:"PostgreSQL schema design and query tuning",s:"partial",must:1,ev:["proj_1"],note:"Schema design shown. No evidence of tuning."},
+  {t:"Docker and CI/CD",s:"pass",must:1,ev:["proj_1"]},
+  {t:"Unit and integration tests",s:"pass",must:1,ev:["proj_1"]},
+  {t:"Message queues (Kafka, RabbitMQ)",s:"fail",must:0,ev:[]},
+  {t:"Cloud (AWS or GCP)",s:"partial",must:0,ev:["proj_1"],note:"Free-tier VPS, not a major cloud."}],
+ lint:[["pass","Single column, text-extractable links"],["pass","GitHub link found in header"],["partial","2 bullets have no numbers (add real ones)"]],
+ bullets:[
+  {before:"Built a backend for a campus marketplace using Node and Postgres.",after:"Built a REST API (Node.js, Express) over a 9-table PostgreSQL schema for a campus marketplace; shipped with Docker and GitHub Actions at 74% Jest coverage.",ev:["proj_1"]},
+  {before:"Made delivery endpoints at internship.",after:"Built delivery-status REST endpoints in Express during a backend internship at a logistics startup.",ev:["exp_1"],need:"How many requests or users did these endpoints serve? Add a real number, or leave it out."}],
+ needs:[{q:"The job asks for query tuning. Did you add an index or read an EXPLAIN plan on the marketplace project?",rel:"PostgreSQL schema design and query tuning"}],
+ letter:"Dear Northwind Payments team,\n\nI am a final-year Computer Science student who builds backends end to end. For my Campus Marketplace API I designed a 9-table PostgreSQL schema, wrote the REST layer in Express, and put it behind Docker and GitHub Actions with 74% Jest coverage.\n\nAt a logistics startup I built delivery-status endpoints in Express, so I have shipped code for people other than me. I have not yet run a message queue in production; I am building a small RabbitMQ worker to close that gap.\n\nI would welcome the chance to talk about the Junior Backend Engineer role.\n\nAda Eze",
+ outreach:"Hi, I applied for the Junior Backend Engineer role. I built a REST API on PostgreSQL with Docker and CI (github.com/adaeze/marketplace-api). Happy to walk through the schema if useful.",
+ interview:[
+  {q:"Walk me through the schema of your marketplace project.",why:"You list PostgreSQL, so expect depth.",out:["Name the 9 tables and the key relations","Explain one index you added and why","State one design change you would make now"],ev:["proj_1"]},
+  {q:"How did your CI pipeline catch bugs?",why:"CI/CD is a must-have.",out:["What ran on each push","One failure it caught","What you would add next"],ev:["proj_1"]},
+  {q:"What is a message queue and when would you use one?",why:"Gap. Be honest and show learning.",out:["Decouple producer and consumer","Retry and ordering trade-offs","Your RabbitMQ worker plan"],ev:[]}],
+ gaps:[{r:"Message queues",say:"Currently building a RabbitMQ worker project.",act:"Build a job-queue demo with retries and dead-letter handling",eff:"8 hours"},
+  {r:"Query tuning",say:"Add only if true after answering the question above.",act:"Seed 100k rows, add an index, compare EXPLAIN output, write it up in the README",eff:"3 hours"}],
+ tracker:{Saved:[{r:"Frontend Intern",c:"Orbit Labs",s:64}],Applied:[{r:"Junior Backend Engineer",c:"Northwind Payments",s:78,d:"Closes Nov 20"}],Interview:[{r:"QA Automation Intern",c:"Helix Systems",s:71,d:"Round 1 Nov 12"}],Closed:[{r:"Platform Engineer",c:"Lattice Cloud",s:41}]}
+};
+</script>
+<style>
+:root,[data-theme=dark]{--bg:#0B0F14;--s1:#121820;--s2:#1A222D;--s3:#222C3A;--bd:#263140;--tx:#E6EDF3;--mu:#8B98A9;--ac:#FF7A1A;--acf:#1A0E02;--fc:#58A6FF;--pass:#3FB950;--part:#D29922;--fail:#F85149;--add:rgba(63,185,80,.14);--del:rgba(248,81,73,.14);--pbg:rgba(210,153,34,.14);color-scheme:dark}
+[data-theme=light]{--bg:#F6F8FA;--s1:#fff;--s2:#EEF2F6;--s3:#E3E9F0;--bd:#D0D7DE;--tx:#1F2328;--mu:#59636E;--ac:#C2410C;--acf:#fff;--fc:#0969DA;--pass:#1A7F37;--part:#9A6700;--fail:#CF222E;--add:rgba(26,127,55,.12);--del:rgba(207,34,46,.10);--pbg:rgba(154,103,0,.12);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.mono,code,pre,.chip,kbd{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center;padding:10px 16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;margin-right:12px}
+nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
+nav button,.tabs button{font:inherit;font-size:14px;background:none;border:0;color:var(--mu);padding:7px 12px;border-radius:8px;cursor:pointer}
+nav button[aria-current=page],.tabs button[aria-selected=true]{background:var(--s2);color:var(--tx);font-weight:600}
+button:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--fc);outline-offset:2px}
+main{max-width:1080px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:26px;line-height:1.2;margin:0 0 4px}h2{font-size:17px;margin:26px 0 10px}p{margin:0 0 10px}.mu{color:var(--mu)}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr}@media(min-width:820px){.grid2{grid-template-columns:1fr 1fr}}
+label{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+textarea,select{width:100%;background:var(--s2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:10px;font:13px/1.5 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+textarea{min-height:230px;resize:vertical}select{font-family:inherit;font-size:14px;padding:8px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:14px}.row>div{flex:1;min-width:140px}
+.btn{font:inherit;font-weight:600;background:var(--ac);color:var(--acf);border:0;border-radius:8px;padding:10px 18px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}.btn.ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
+kbd{font-size:11px;border:1px solid var(--bd);border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--mu)}
+.chip{display:inline-block;font-size:12px;border:1px solid var(--bd);border-radius:4px;padding:0 7px;color:var(--mu);margin:2px 4px 2px 0}.chip.miss{border-style:dashed}
+.cov{display:flex;gap:3px;margin:10px 0}.cov i{flex:1;height:22px;border-radius:3px;background:var(--s3)}.cov i.on{background:var(--ac)}
+.big{font-size:44px;font-weight:700;line-height:1}.badge{font-size:13px;font-weight:600;border-radius:999px;padding:1px 10px;white-space:nowrap}
+.b-pass{color:var(--pass);background:var(--add)}.b-partial{color:var(--part);background:var(--pbg)}.b-fail{color:var(--fail);background:var(--del)}
+.req{display:grid;grid-template-columns:96px 1fr;gap:4px 12px;padding:11px 0;border-bottom:1px solid var(--bd)}.req .badge{align-self:start;justify-self:start;margin-top:2px}.req .note{grid-column:2;font-size:13px;color:var(--mu)}
+.diff{font:13px/1.6 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin:10px 0}
+.diff div{padding:6px 12px 6px 30px;position:relative;white-space:pre-wrap}.diff .d{background:var(--del)}.diff .a{background:var(--add)}
+.diff .d:before{content:"-";position:absolute;left:12px;color:var(--fail)}.diff .a:before{content:"+";position:absolute;left:12px;color:var(--pass)}
+.need{border:1px dashed var(--part);background:var(--pbg);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:14px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin:16px 0;flex-wrap:wrap}
+.doc{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:22px 26px;white-space:pre-wrap;line-height:1.65;max-width:70ch}
+.kan{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.kan h3{font-size:13px;color:var(--mu);margin:0 0 8px;font-weight:600}
+.k{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:14px}.k b{display:block}
+.stage{display:flex;gap:10px;padding:8px 0;align-items:center}.stage .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--bd)}.stage.done .dot{background:var(--pass);border-color:var(--pass)}.stage.run .dot{border-color:var(--ac);animation:p 1s infinite}
+@keyframes p{50%{opacity:.35}}@media(prefers-reduced-motion:reduce){.stage.run .dot{animation:none}}
+[hidden]{display:none}
+</style></head><body>
+<header><div class="logo"><svg width="28" height="28" viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="9" fill="none" stroke="var(--ac)" stroke-width="2.5"/><path d="M10 14h9M10 21h15M10 28h11" stroke="var(--mu)" stroke-width="3" stroke-linecap="round"/><path d="M24 14l3.5 3.5 6-7" fill="none" stroke="var(--ac)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>HireKit</div>
+<nav id="nav"></nav><button class="btn ghost" id="theme" style="padding:6px 12px">Theme</button></header>
+<main id="app"></main>
+<script>
+const S=window.SAMPLE,$=s=>document.querySelector(s),ev=a=>a.map(x=>`<span class="chip">${x}</span>`).join("");
+const lab={pass:"✔ Pass",partial:"◐ Partial",fail:"✖ Fail"};
+const must=S.reqs.filter(r=>r.must);
+const screens={
+new:()=>`<h1>New kit</h1><p class="mu">Paste a job and your CV. Every line in your kit links back to evidence in your CV.</p>
+<div class="grid2"><div class="card"><label for="j">Job description</label><textarea id="j">${S.job.text}</textarea></div>
+<div class="card"><label for="c">Your CV <span class="chip">saved profile</span></label><textarea id="c">${S.cv}</textarea></div></div>
+<div class="row"><div><label for="t">Role track</label><select id="t"><option>${S.job.track}</option><option>Frontend</option><option>Full-stack</option><option>Data and ML</option><option>DevOps and SRE</option></select></div>
+<div><label for="l">Level</label><select id="l"><option>${S.job.level}</option><option>Intern</option><option>Mid</option><option>Senior</option></select></div>
+<div><button class="btn" id="build">Build my kit</button> <kbd>Ctrl</kbd> <kbd>Enter</kbd></div></div>`,
+progress:()=>{const st=["Reading your CV","Reading the job","Matching requirements","Writing your kit","Checking every claim against your CV"];
+ return `<h1>Building your kit</h1><p class="mu">${S.job.title}, ${S.job.company}</p><div class="card" id="st">${st.map((s,i)=>`<div class="stage" data-i="${i}"><span class="dot"></span>${s}</div>`).join("")}</div><p><button class="btn ghost" id="cancel">Cancel</button></p>`},
+report:()=>`<h1>${S.job.title}</h1><p class="mu">${S.job.company}. Track: ${S.job.track}. Level: ${S.job.level}.</p>
+<div class="card"><div style="display:flex;gap:18px;align-items:baseline;flex-wrap:wrap"><span class="big">${S.score}%</span><span class="mu">requirement coverage</span></div>
+<div class="cov" role="img" aria-label="${S.score} percent coverage">${Array.from({length:20},(_,i)=>`<i class="${i<Math.round(S.score/5)?"on":""}"></i>`).join("")}</div><p style="margin:0">${S.summary}</p></div>
+<h2>Requirement tests</h2><div class="card" style="padding:4px 16px">${S.reqs.map(r=>`<div class="req"><span class="badge b-${r.s}">${lab[r.s]}</span><div>${r.t}${r.must?"":' <span class="mu">(nice to have)</span>'}<br>${r.ev.length?ev(r.ev):'<span class="chip miss">no evidence yet</span>'}</div>${r.note?`<div class="note">${r.note}</div>`:""}</div>`).join("")}</div>
+<div class="grid2"><div><h2>Keywords</h2><div class="card">${S.keywords.found.map(k=>`<span class="chip" style="color:var(--pass)">${k}</span>`).join("")}${S.keywords.missing.map(k=>`<span class="chip miss">${k}</span>`).join("")}<p class="mu" style="margin:8px 0 0;font-size:13px">Dashed means not in your CV. Add only what is true.</p></div></div>
+<div><h2>Resume lint</h2><div class="card">${S.lint.map(l=>`<div><span class="badge b-${l[0]}">${l[0]=="pass"?"✔":"◐"}</span> ${l[1]}</div>`).join("")}</div></div></div>`,
+kit:(sub="r")=>`<h1>Your kit</h1><div class="tabs" id="kt">${[["r","Resume diff"],["l","Cover letter"],["o","Outreach"],["i","Interview prep"],["g","Gap plan"]].map(([k,n])=>`<button role="tab" data-k="${k}" aria-selected="${k==sub}">${n}</button>`).join("")}</div><div id="kc">${kit[sub]()}</div>`,
+tracker:()=>`<h1>Tracker</h1><p class="mu">Your applications, saved in your Anna account.</p><div class="kan">${Object.entries(S.tracker).map(([c,a])=>`<div><h3>${c} (${a.length})</h3>${a.map(x=>`<div class="k"><b>${x.r}</b>${x.c}<br><span class="chip">fit ${x.s}%</span>${x.d?`<span class="mu" style="font-size:12px">${x.d}</span>`:""}</div>`).join("")}</div>`).join("")}</div>`};
+const kit={r:()=>`<p class="mu">Red is your original line. Green is the tailored line. Each links to evidence in your CV.</p>${S.bullets.map(b=>`<div class="diff"><div class="d">${b.before}</div><div class="a">${b.after}</div></div>${ev(b.ev)}${b.need?`<div class="need">${b.need}</div>`:""}`).join("")}<h2>Needs your input</h2>${S.needs.map(n=>`<div class="need"><b>${n.q}</b><br><span class="mu">Relates to: ${n.rel}</span><p style="margin:8px 0 0"><button class="btn">Update kit</button></p></div>`).join("")}`,
+l:()=>`<div class="doc">${S.letter}</div><p style="margin-top:12px"><button class="btn">Copy letter</button> <button class="btn ghost">Export all as Markdown</button></p>`,
+o:()=>`<div class="doc">${S.outreach}</div><p style="margin-top:12px"><button class="btn">Copy message</button></p>`,
+i:()=>S.interview.map(x=>`<div class="card" style="margin-bottom:10px"><b>${x.q}</b><p class="mu" style="margin:2px 0 8px">${x.why}</p><ul style="margin:0 0 6px;padding-left:20px">${x.out.map(o=>`<li>${o}</li>`).join("")}</ul>${x.ev.length?ev(x.ev):'<span class="chip miss">no evidence yet</span>'}</div>`).join(""),
+g:()=>S.gaps.map(x=>`<div class="card" style="margin-bottom:10px"><b>${x.r}</b><p style="margin:6px 0">Honest phrasing: <span class="mono" style="font-size:13px">${x.say}</span></p><p style="margin:0">Next step: ${x.act} <span class="chip">${x.eff}</span></p></div>`).join("")};
+let cur="new";const names={new:"New kit",report:"Report",kit:"Kit",tracker:"Tracker"};
+function go(s){cur=s;$("#app").innerHTML=screens[s]();$("#nav").innerHTML=Object.entries(names).map(([k,n])=>`<button ${k==s||(s=="progress"&&k=="new")?'aria-current="page"':""} data-s="${k}">${n}</button>`).join("");
+ if(s=="new")$("#build").onclick=()=>go("progress");
+ if(s=="progress"){let i=0;const rows=[...document.querySelectorAll(".stage")],t=setInterval(()=>{rows.forEach((r,j)=>{r.className="stage"+(j<i?" done":j==i?" run":"")});if(i++>rows.length){clearInterval(t);go("report")}},650);$("#cancel").onclick=()=>{clearInterval(t);go("new")}}
+ if(s=="kit"){$("#kt").onclick=e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll("#kt button").forEach(x=>x.setAttribute("aria-selected",x==b));$("#kc").innerHTML=kit[b.dataset.k]()}}}
+$("#nav").onclick=e=>{const b=e.target.closest("button");if(b)go(b.dataset.s)};
+$("#theme").onclick=()=>{const r=document.documentElement;r.dataset.theme=r.dataset.theme=="dark"?"light":"dark"};
+document.documentElement.dataset.theme=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
+addEventListener("keydown",e=>{if(cur=="new"&&e.ctrlKey&&e.key=="Enter")go("progress")});go("new");
+</script></body></html>

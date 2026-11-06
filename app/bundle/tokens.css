@@ -1,0 +1,31 @@
+/* HireKit design tokens. Single source of truth for the real UI. Dark is the default; light follows prefers-color-scheme or [data-theme=light]. */
+:root,[data-theme="dark"]{
+  --hk-bg:#0B0F14; --hk-s1:#121820; --hk-s2:#1A222D; --hk-s3:#222C3A; --hk-border:#263140; --hk-border-strong:#3A4A5F;
+  --hk-text:#E6EDF3; --hk-muted:#8B98A9; --hk-faint:#5F6C7D;
+  --hk-accent:#FF7A1A; --hk-accent-hover:#FF8F3F; --hk-accent-fg:#1A0E02; --hk-focus:#58A6FF;
+  --hk-pass:#3FB950; --hk-partial:#D29922; --hk-fail:#F85149; --hk-info:#58A6FF;
+  --hk-add-bg:rgba(63,185,80,.14); --hk-del-bg:rgba(248,81,73,.14); --hk-partial-bg:rgba(210,153,34,.14);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --hk-bg:#F6F8FA; --hk-s1:#FFFFFF; --hk-s2:#EEF2F6; --hk-s3:#E3E9F0; --hk-border:#D0D7DE; --hk-border-strong:#AFB8C1;
+  --hk-text:#1F2328; --hk-muted:#59636E; --hk-faint:#818B98;
+  --hk-accent:#C2410C; --hk-accent-hover:#9A3412; --hk-accent-fg:#FFFFFF; --hk-focus:#0969DA;
+  --hk-pass:#1A7F37; --hk-partial:#9A6700; --hk-fail:#CF222E; --hk-info:#0969DA;
+  --hk-add-bg:rgba(26,127,55,.12); --hk-del-bg:rgba(207,34,46,.10); --hk-partial-bg:rgba(154,103,0,.12); color-scheme:light;}}
+[data-theme="light"]{
+  --hk-bg:#F6F8FA; --hk-s1:#FFFFFF; --hk-s2:#EEF2F6; --hk-s3:#E3E9F0; --hk-border:#D0D7DE; --hk-border-strong:#AFB8C1;
+  --hk-text:#1F2328; --hk-muted:#59636E; --hk-faint:#818B98;
+  --hk-accent:#C2410C; --hk-accent-hover:#9A3412; --hk-accent-fg:#FFFFFF; --hk-focus:#0969DA;
+  --hk-pass:#1A7F37; --hk-partial:#9A6700; --hk-fail:#CF222E; --hk-info:#0969DA;
+  --hk-add-bg:rgba(26,127,55,.12); --hk-del-bg:rgba(207,34,46,.10); --hk-partial-bg:rgba(154,103,0,.12); color-scheme:light;
+}
+:root{
+  --hk-font-sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --hk-font-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --hk-text-xs:12px; --hk-text-sm:13px; --hk-text-base:15px; --hk-text-lg:18px; --hk-text-xl:22px; --hk-text-2xl:30px;
+  --hk-space-1:4px; --hk-space-2:8px; --hk-space-3:12px; --hk-space-4:16px; --hk-space-5:24px; --hk-space-6:32px; --hk-space-7:48px;
+  --hk-radius-sm:4px; --hk-radius-md:8px; --hk-radius-lg:12px;
+  --hk-ring:0 0 0 1px var(--hk-border); --hk-raise:0 1px 0 rgba(255,255,255,.04) inset,0 6px 20px rgba(0,0,0,.28);
+  --hk-ease:cubic-bezier(.2,0,0,1); --hk-fast:120ms; --hk-base:200ms;
+}

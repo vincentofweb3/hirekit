@@ -25,11 +25,15 @@ Current: Phase 1 backend core and the bundle UI are implemented and verified loc
 - Visual/accessibility review for the *mobile shell* specifically — blocked on PAT (see Blockers). Desktop, tablet-width and touch emulation are verified.
 
 ## Next
-- Human: `anna-app login --host https://anna.partners`; then `anna-app executa publish --profile binary --dry-run` to validate the artifact, and publish/upload when a Cloud Agent is ready; test on a real Cloud Agent; mobile shell test.
+- Review outcome of apps/hirekit v0.1.0 (status `pending_review`, pinned at submit-review). The app is not installable until admin approves; after approval run `anna-app apps release 0.1.0` to go live.
 - Update the G1 report with live-sampling evidence.
 
 ## Blockers
-- **Human action required:** create an Anna account at https://anna.partners, activate Developer Console, then `anna-app login --host https://anna.partners` (device flow). Needed for live LLM, publishing, Cloud Agent/mobile smoke tests, and `executa publish --profile binary` / `upload-binaries`.
+- Developer Console activated (self-service). Handle set to `@vincentofweb3`; apps publish as `@vincentofweb3/<slug>`.
+- **App published and submitted:** `anna-app apps publish --profile binary` succeeded — bundled executa `hirekit` → `tool-victoribiloju111_6541-hirekit-gg43q8r8` (protocol manifest synced, host capabilities `llm.sample`); working bundle 14 files, 241.7 KB, staged ready; `.anna/app.json` first push (rev 1); immutable version **0.1.0** cut (`version_id=2015`); Executa frozen → `executa_version=1005` (v0.1.0).
+- `anna-app apps submit-review hirekit` succeeded — **status: pending_review**; under review: **v0.1.0** (pinned as review candidate). `apps status hirekit` → `app_id=833`, `status=pending_review`, `latest=v0.1.0`.
+- `executas/hirekit/manifest.json` added (the plugin's describe response) so `llm.sample` is grantable in the Executa permissions UI; `anna-tool-ids.js` rewritten by CLI with the minted tool_id.
+- After admin approval: run `anna-app apps release 0.1.0` to make it live; a mobile-shell run on device/emulator is still required for final UI verification; and `apps publish` is a composite (push + cut), not a store release.
 - Git repo not initialized; commits/pushes deferred unless requested.
 - No browser installed locally; we used Playwright + the cached Chromium binary with downloaded system libraries (`libnspr4`, `libnss3`, `libasound2t64`) extracted to `/tmp/opencode/chromium-libs`.
 

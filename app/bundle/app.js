@@ -2029,6 +2029,8 @@ function handleKeyDown(event) {
 }
 
 async function connectHost() {
+  const isEmbedded = typeof window !== "undefined" && window.parent && window.parent !== window;
+  if (!isEmbedded) return null;
   try {
     const sdk = await import("/static/anna-apps/_sdk/latest/index.js");
     if (!sdk?.AnnaAppRuntime) return null;

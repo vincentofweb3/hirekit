@@ -33,7 +33,7 @@ cat > "artifacts/staging/hirekit-${version}/manifest.json" <<JSON
   }
 }
 JSON
-tar -czf "$archive" -C artifacts/staging "hirekit-${version}"
+tar -czf "$archive" -C "artifacts/staging/hirekit-${version}" .
 rm -rf artifacts/staging
 sha256sum "$archive"
 

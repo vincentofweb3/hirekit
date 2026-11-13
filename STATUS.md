@@ -2,48 +2,25 @@
 Last updated: 2026-11-06 UTC
 
 ## Gate
-Current: Phase 1 backend core and the bundle UI are implemented and verified locally. G1 target: Fri 2026-11-06 morning.
+Current: Phase 1 backend core implemented, bundle UI verified, Anna Dev app published (v0.1.0 rejected, v0.1.1 pending resubmission). G1 already passed; focus is review acceptance.
 
 ## Done
-- Read every planning file, design tokens/assets/mockup, and the Anna docs + forum threads 205, 228, 238, 316, 351, 372.
-- Installed `uv 0.13.7` and `@anna-ai/cli 0.1.63`; `anna-app doctor` passes.
-- Scaffolded `app/` (docs stay at repo root): `manifest.json` (schema 3, bundled Executa, `llm.sample`, `storage.kv`, desktop+mobile), `app.json`, `bundle/`, `executas/hirekit/`, `fixtures/`.
-- Executa plugin is protocol v2 and exposes `parse_cv | parse_job | match | generate | verify | ping`; `verify` finalizes the kit (fit score, lint, needs-input, gap plan). Sampling echoes `metadata.executa_invoke_id` and returns structured errors.
-- Built `hirekit/taxonomy/stack.json` with **510 entries** + alias/related matching; added `models.py`, `prompts/` (5 templates), `scoring.py`, `lint.py`, `checks.py`, `verify.py`, `stages.py`.
-- Added 22 pytest tests (taxonomy, parsing, matching, scoring, honesty, lint, plugin). `uv run --extra dev pytest -q` passes.
-- End-to-end Executa smoke test with mock sampling: parse -> match -> generate -> verify; fabricated Kubernetes bullet dropped, gap question added, invented metric removed, lint pass.
-- **Bundle UI S1–S7 implemented** in `app/bundle/`: header/footer, New kit, progress, fit report, kit tabs (Resume diff, Cover letter, Outreach, Interview prep, Gap plan), needs-input card, tracker board, settings/privacy (save CV, defaults, theme, delete-all with typed confirmation), evidence viewer/add dialog, answer/number dialogs, toast with undo.
-- **Storage:** host `storage.*` with `localStorage` fallback; split keys under `hirekit/`; index keeps 20 kits and stale kit records are deleted; tracker statuses validated before apply; kit saved only after verify; nothing is sent automatically.
-- **Five invokes with per-call `{timeoutMs}`** (65/50/50/90/65 s) so `generate` is not cut off by the SDK's 70 s default; plugin sampling waits reduced to 35–80 s. `parse_cv`/`parse_job` run in parallel; partial results render a report-only view with retry, never an unverified kit.
-- **Preview mode** (no host): sample kit pre-filled, `Preview` badge and banner, tracker seeds the sample applications; no setup required.
-- **Verification:** headless Chromium against the dev harness: build -> report -> kit -> tracker -> settings, dark/light themes, no console errors, no horizontal scroll at 320–1440 px; coarse-pointer 44×44 pt targets; safe-area insets; sticky mobile CTA; `anna-app validate --strict` passes.
-- **Mobile review fixes:** removed our own `<meta name="viewport">` (shell injects it; reviewers grep for it); after a build the page scrolled under the sticky header so the title was clipped — now reset to top; gap-plan labels distinguish "Partial evidence" from "Gap — no evidence"; all bundle buttons are `type="button"`.
-- **Linux x86_64 Executa binary built and verified:** `app/executas/hirekit/artifacts/hirekit-0.1.0-linux-x86_64.tar.gz` (14 MB, sha256 `77ca7040e2fb233c3ad1d3bc0f1ef16f9354360115446b39884b12da1dfb3cd8`, entrypoint `bin/hirekit-tool`); `executa.json` declares a `binary` distribution profile with `binary_artifacts`; `local` remains active. Upload/Cloud Agent verification requires PAT.
-- **`llm.complete` fallback implemented:** when sampling is denied (`-32001/-32008/-32009`), the executa returns `{code:"SAMPLE_REQUIRED", params}`, the bundle calls `anna.llm.complete`, and re-invokes the same tool with `precomputed_response`; the executa runs the identical parsing/validation path so fabrication checks are unchanged. Covered by new plugin tests (24 total pass) and a Node-level pipeline relay test.
+- Inbox and plan files read; Anna platform research done (forum threads 205, 228, 238, 316, 351, 372; docs for apps/manifest/storage/sampling/mobile/binary).
+- Executa protocol v2 plugin with five tools (`parse_cv`, `parse_job`, `match`, `generate`, `verify`) plus `ping`; sampling metadata echo; structured errors; `llm.complete` fallback implemented.
+- Taxonomy 510 entries; scoring, lint, honesty enforcement; 24 pytest tests pass; `anna-app validate --strict` passes.
+- Bundle UI implemented (S1–S7) with storage, theme, responsive 320–2560px; no console errors; 44px touch targets; preview fallback.
+- Linux x86_64 binary built and archived (`hirekit-0.1.1-linux-x86_64.tar.gz`) with root-level `manifest.json` + `bin/hirekit-tool`; works.
+- App published to Anna (app_id=833) as `@vincentofweb3/hirekit`; reviewer rejected v0.1.0 for missing Linux binary and incomplete listing.
+- v0.1.1 changes: binary distribution `active`, root-level archive, listing logo/screenshots/description uploaded via `anna-app apps sync-meta`.
+- GitHub repo public: https://github.com/vincentofweb3/hirekit
 
 ## In progress
-- Visual/accessibility review for the *mobile shell* specifically — blocked on PAT (see Blockers). Desktop, tablet-width and touch emulation are verified.
-
-## Next
-- Review outcome of apps/hirekit v0.1.0 (status `pending_review`, pinned at submit-review). The app is not installable until admin approves; after approval run `anna-app apps release 0.1.0` to go live.
-- Update the G1 report with live-sampling evidence.
+- Clean up STATUS/process notes for accuracy before further review.
+- Re-cut and re-submit v0.1.1 for review (requires Cloud Agent test first).
 
 ## Blockers
-- Developer Console activated (self-service). Handle set to `@vincentofweb3`; apps publish as `@vincentofweb3/<slug>`.
-- **App published and submitted:** `anna-app apps publish --profile binary` succeeded — bundled executa `hirekit` → `tool-victoribiloju111_6541-hirekit-gg43q8r8` (protocol manifest synced, host capabilities `llm.sample`); working bundle 14 files, 241.7 KB, staged ready; `.anna/app.json` first push (rev 1); immutable version **0.1.0** cut (`version_id=2015`); Executa frozen → `executa_version=1005` (v0.1.0).
-- `anna-app apps submit-review hirekit` succeeded — **status: pending_review**; under review: **v0.1.0** (pinned as review candidate). `apps status hirekit` → `app_id=833`, `status=pending_review`, `latest=v0.1.0`.
-- `executas/hirekit/manifest.json` added (the plugin's describe response) so `llm.sample` is grantable in the Executa permissions UI; `anna-tool-ids.js` rewritten by CLI with the minted tool_id.
-- After admin approval: run `anna-app apps release 0.1.0` to make it live; a mobile-shell run on device/emulator is still required for final UI verification; and `apps publish` is a composite (push + cut), not a store release.
-- Git repo not initialized; commits/pushes deferred unless requested.
-- No browser installed locally; we used Playwright + the cached Chromium binary with downloaded system libraries (`libnspr4`, `libnss3`, `libasound2t64`) extracted to `/tmp/opencode/chromium-libs`.
-
-## Decisions needed from orchestrator
-1. **`llm.complete` fallback:** implemented (executa `SAMPLE_REQUIRED` relay + bundle `host.llm.complete` + re-invoke with `precomputed_response`). Sampling remains primary (default-on since beta.135, forum 238).
-2. **Executa sampling vs zero setup:** host sampling primary; `llm.complete` fallback for denied/unnegotiated sampling.
-3. **V5 five-invoke split:** confirmed and implemented with per-call timeouts.
-4. **V3/V7 scope:** paste-text only; no PDF/DOCX, no job-URL fetch — unchanged for v1.
-5. **Layout:** app in `app/`, planning docs at repo root; publish root is `app/`.
-
+- Need a real Cloud Agent test before re-submitting (fresh install, full flow).
+- Reviewer cannot be forced; acceptance is Anna's decision.
 ## Verification answers (V1 to V10): answer + doc link each
 - **V1:** A Qualified App Run does **not** have to go through an Executa. A bundle-only app counts if a signed-in user starts it, it completes the declared primary function, returns a meaningful result, and the activity is verifiable in server-side records; a successful `llm.complete` can qualify. We still route the primary pipeline through the bundled Executa with host sampling (default-on), so the run is server-side and recorded. Links: https://forum.anna.partners/t/founding-builder-buidl-deadline-while-app-review-is-pending-and-mau-counting-for-bundle-only-apps/351 and https://anna.partners/developers/tools/executa-sampling
 - **V2:** Since the October cycle all apps by one builder are one portfolio: users are deduplicated and there is one grant per builder per month. HireKit and StudyForge must stay distinct. Links: https://forum.anna.partners/t/turn-your-ai-agents-apps-into-recurring-monthly-grants-join-the-anna-ai-os-founding-builder-program-up-to-80k-month-pool/205 and https://dorahacks.io/hackathon/2349/detail

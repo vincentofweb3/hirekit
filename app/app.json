@@ -1,13 +1,21 @@
 {
   "slug": "hirekit",
   "name": "HireKit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "tagline": "Evidence-backed job application kits for technical roles.",
-  "description": "HireKit turns a job post and your CV into an application kit you can defend in an interview. It maps every requirement to evidence in your CV, shows what is covered, partial, or missing, and writes tailored bullets, a cover letter, outreach, interview prep, and a gap plan. Every generated line cites the CV evidence behind it; if the evidence is missing, HireKit asks instead of inventing it.",
+  "description": "HireKit turns a job post and your CV into a job application kit you can defend in an interview. Paste a job and your CV; HireKit extracts job requirements, maps them to evidence in your CV, and shows what is covered, partial, or missing before it writes anything. It produces a fit report, tailored resume bullets tied to CV evidence, a cover letter, recruiter outreach, interview prep, and a gap plan for missing requirements. Every generated line cites CV evidence; if evidence is missing, HireKit asks instead of inventing it. Designed for technical roles (software engineering, infrastructure, data, QA, and related tracks). Includes a tracker for applications and a technical claim-risk review pass. No invented employers, metrics, degrees, titles, dates, or technologies \u2014 if it cannot be traced to your CV, it is removed.",
   "category": "productivity",
   "bundled_executas": {
     "hirekit": {
       "path": "./executas/hirekit"
     }
-  }
+  },
+  "logo_file": "assets/listing/logo.png",
+  "screenshots": [
+    "assets/listing/screenshot-desktop.png",
+    "assets/listing/screenshot-report.png",
+    "assets/listing/screenshot-cover-letter.png",
+    "assets/listing/screenshot-tablet.png",
+    "assets/listing/screenshot-mobile.png"
+  ]
 }

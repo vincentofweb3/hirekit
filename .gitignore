@@ -10,3 +10,8 @@ build/
 *.egg-info/
 .DS_Store
 artifacts/
+
+# Windows downloaded-file metadata
+*:Zone.Identifier
+*.Zone.Identifier
+/*.png

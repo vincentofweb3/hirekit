@@ -24,7 +24,7 @@ from hirekit.models import EvidenceBank, JobRequirements, KitDraft, MatchResult 
 
 MANIFEST: dict[str, Any] = {
     "display_name": "HireKit",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": (
         "Evidence-first application kit pipeline. Parses a CV into an evidence "
         "bank, parses a job into requirements, matches them, generates a kit, "

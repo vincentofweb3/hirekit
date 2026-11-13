@@ -7,13 +7,22 @@
     }
   ],
   "optional_executas": [],
-  "host_capabilities": ["llm.sample"],
+  "host_capabilities": [
+    "llm.sample"
+  ],
   "storage": {
     "kv": true,
     "files": false
   },
   "system_prompt_addendum": "The user has HireKit open. HireKit builds evidence-backed job application kits for technical roles. Never invent experience, metrics, employers, titles, dates, degrees, or technologies. Every generated line must cite evidence IDs from the user's CV. When evidence is missing, ask the user instead of filling the gap. The HireKit Executa is the source of truth for parsing, matching, scoring, and claim verification.",
-  "tags": ["career", "jobs", "resume", "hiring", "developer-tools", "productivity"],
+  "tags": [
+    "career",
+    "jobs",
+    "resume",
+    "hiring",
+    "developer-tools",
+    "productivity"
+  ],
   "ui": {
     "bundle": {
       "format": "static-spa",
@@ -25,27 +34,52 @@
         "name": "main",
         "title": "HireKit",
         "default": true,
-        "min_size": { "w": 360, "h": 520 },
-        "default_size": { "w": 1080, "h": 760 },
-        "max_size": { "w": 1440, "h": 1000 },
+        "min_size": {
+          "w": 360,
+          "h": 520
+        },
+        "default_size": {
+          "w": 1080,
+          "h": 760
+        },
+        "max_size": {
+          "w": 1440,
+          "h": 1000
+        },
         "resizable": true,
         "movable": true,
         "single_instance": true,
         "icon": "icon.svg"
       }
     ],
-    "form_factors": ["desktop", "mobile"],
+    "form_factors": [
+      "desktop",
+      "mobile"
+    ],
     "host_api": {
-      "tools": ["required:*"],
-      "storage": ["get", "set", "delete", "list"],
-      "window": ["set_title"],
-      "llm": ["complete"]
+      "tools": [
+        "required:bundled:hirekit"
+      ],
+      "storage": [
+        "get",
+        "set",
+        "delete",
+        "list"
+      ],
+      "window": [
+        "set_title"
+      ],
+      "llm": [
+        "complete"
+      ]
     },
     "csp_overrides": {},
     "state_merge": "last_writer_wins"
   },
   "dev": {
-    "fixtures": ["fixtures/*.jsonl"],
+    "fixtures": [
+      "fixtures/*.jsonl"
+    ],
     "seed_storage": {},
     "user_id": 1
   }

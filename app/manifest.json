@@ -7,13 +7,6 @@
     }
   ],
   "optional_executas": [],
-  "host_capabilities": [
-    "llm.sample"
-  ],
-  "storage": {
-    "kv": true,
-    "files": false
-  },
   "system_prompt_addendum": "The user has HireKit open. HireKit builds evidence-backed job application kits for technical roles. Never invent experience, metrics, employers, titles, dates, degrees, or technologies. Every generated line must cite evidence IDs from the user's CV. When evidence is missing, ask the user instead of filling the gap. The HireKit Executa is the source of truth for parsing, matching, scoring, and claim verification.",
   "tags": [
     "career",
@@ -82,5 +75,12 @@
     ],
     "seed_storage": {},
     "user_id": 1
+  },
+  "host_capabilities": [
+    "llm.sample"
+  ],
+  "storage": {
+    "kv": true,
+    "files": false
   }
 }

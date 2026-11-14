@@ -50,6 +50,7 @@ const state = {
   toast: null,
   storageError: false,
   demo: false,
+  installHint: null,
   needsAnswers: {},
   editingLetter: false,
   letterDraft: "",
@@ -299,6 +300,23 @@ function renderMobileAction() {
 }
 
 function renderBanner() {
+  if (state.installHint) {
+    return `
+      <div class="hk-banner hk-banner-warn" role="status">
+        <span class="hk-banner-icon">${ICON.alert}</span>
+        <div class="hk-banner-body">
+          <p><strong>${esc(state.installHint.title)}</strong> ${esc(state.installHint.message)}</p>
+          <ol class="hk-steps">
+            ${state.installHint.steps.map((step) => `<li>${esc(step)}</li>`).join("")}
+          </ol>
+          <div class="hk-banner-actions">
+            <button type="button" class="hk-btn hk-btn-sm hk-btn-primary" data-action="check-tool">Check again</button>
+            <button type="button" class="hk-btn hk-btn-sm" data-action="dismiss-hint">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
   let banner = state.banner;
   if (!banner && state.storageError) {
     banner = {
@@ -491,6 +509,11 @@ function renderProgress() {
             <span class="hk-banner-icon">${ICON.alert}</span>
             <div class="hk-banner-body">
               <p><strong>${esc(error.code || "Build failed")}</strong> ${esc(error.message || "Something went wrong.")}</p>
+              ${error.steps?.length ? `
+                <ol class="hk-steps">
+                  ${error.steps.map((step) => `<li>${esc(step)}</li>`).join("")}
+                </ol>
+              ` : ""}
               <div class="hk-banner-actions">
                 ${error.retryable ? `<button type="button" class="hk-btn hk-btn-sm hk-btn-primary" data-action="retry">Retry</button>` : ""}
                 <button type="button" class="hk-btn hk-btn-sm" data-action="cancel">Back to edit</button>
@@ -1235,6 +1258,7 @@ async function buildKit() {
       retryable: err.retryable !== false,
       stage: err.stage,
       hasPartial: Boolean(partial.matches),
+      steps: err.steps || null,
     };
     if (partial.matches) {
       state.current = {
@@ -1830,6 +1854,15 @@ function handleClick(event) {
     deleteEverything();
     return;
   }
+  if (action === "check-tool") {
+    checkToolStatus();
+    return;
+  }
+  if (action === "dismiss-hint") {
+    state.installHint = null;
+    render();
+    return;
+  }
   if (action === "dismiss-banner") {
     state.banner = null;
     state.storageError = false;
@@ -2052,6 +2085,35 @@ function handleStorageError(error, operation) {
   }
 }
 
+const TOOL_FIX_STEPS = [
+  "Open More → Installed Apps → HireKit, then press Repair (or reinstall HireKit).",
+  "Make sure a Cloud Agent is awake: open a new chat in Anna and send a message.",
+  "Come back and press Check again.",
+];
+
+async function checkToolStatus() {
+  const status = await pipeline?.toolStatus();
+  if (!status) {
+    state.installHint = null;
+    render();
+    return;
+  }
+  if (status.available) {
+    state.installHint = null;
+    showToast("HireKit's tool is installed and ready.");
+  } else {
+    state.installHint = {
+      title: "Backend tool not installed.",
+      message:
+        status.status === "missing"
+          ? "This agent cannot run HireKit's backend tool yet, so building a kit will fail."
+          : `The backend tool is currently "${status.status}" on this agent, so building a kit will fail.`,
+      steps: TOOL_FIX_STEPS,
+    };
+  }
+  render();
+}
+
 async function init() {
   host = await connectHost();
   state.demo = !host;
@@ -2104,6 +2166,7 @@ async function init() {
   await refreshSummary();
   state.ready = true;
   render();
+  if (!state.demo) checkToolStatus();
   if (host?.window?.set_title) {
     try {
       await host.window.set_title({ title: "HireKit" });

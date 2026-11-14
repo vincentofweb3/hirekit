@@ -27,14 +27,71 @@ const clone = (value) =>
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class PipelineError extends Error {
-  constructor(code, message, stage, { partial = null, retryable = true } = {}) {
+  constructor(code, message, stage, { partial = null, retryable = true, steps = null } = {}) {
     super(message);
     this.name = "PipelineError";
     this.code = code || "TOOL_ERROR";
     this.stage = stage || "";
     this.partial = partial;
     this.retryable = retryable;
+    this.steps = steps;
   }
+}
+
+/**
+ * Turn a host/platform error code into something a user can act on.
+ * The raw codes (permission_denied, agent_unavailable, …) mean nothing to
+ * someone who just pressed "Build my kit".
+ */
+export function explainError(code, fallbackMessage) {
+  const key = String(code || "").toLowerCase();
+  if (key.includes("permission_denied")) {
+    return {
+      message:
+        "The HireKit tool is not installed on this agent yet, so the app cannot run it.",
+      steps: [
+        "Open More → Installed Apps → HireKit, then press Repair (or reinstall HireKit).",
+        "Make sure a Cloud Agent is awake: open a new chat in Anna and send a message.",
+        "Come back and press Build my kit again.",
+      ],
+      retryable: true,
+    };
+  }
+  if (key.includes("executa_unavailable") || key.includes("agent_unavailable")) {
+    return {
+      message: "The Cloud Agent that runs the HireKit tool is asleep or unreachable.",
+      steps: [
+        "Open a new chat in Anna and send a message so your Cloud Agent comes online.",
+        "Wait until it shows as online under More → Agents, then press Retry.",
+      ],
+      retryable: true,
+    };
+  }
+  if (key.includes("tool_timeout") || key.includes("timeout")) {
+    return {
+      message: null,
+      steps: ["Press Retry — the second attempt is usually faster."],
+      retryable: true,
+    };
+  }
+  if (key.includes("sampling")) {
+    return {
+      message: null,
+      steps: [
+        "Check More → Advanced → LLM and pick a model you have access to.",
+        "Then press Retry.",
+      ],
+      retryable: true,
+    };
+  }
+  if (key.includes("no_eligible_model") || key.includes("app_quota_exceeded")) {
+    return {
+      message: null,
+      steps: ["Check More → Advanced → LLM, then press Retry."],
+      retryable: true,
+    };
+  }
+  return { message: null, steps: null, retryable: true, fallback: fallbackMessage };
 }
 
 export class Pipeline {
@@ -55,25 +112,47 @@ export class Pipeline {
       );
     } catch (err) {
       const data = err?.data || {};
+      const explained = explainError(data.code || err?.code, err?.message);
       throw new PipelineError(
         data.code || err?.code || "TOOL_ERROR",
-        err?.message || "The tool call failed. Try again.",
+        explained.message || explained.fallback || err?.message || "The tool call failed. Try again.",
         tool,
-        { retryable: data.retryable !== false },
+        { retryable: data.retryable !== false && explained.retryable, steps: explained.steps },
       );
     }
     if (isSampleRequired(res)) return this.callViaHostLlm(tool, args, res);
     if (res && res.success === false) {
       const data = res.data || {};
+      const explained = explainError(data.code, res.error || "The tool call failed. Try again.");
       throw new PipelineError(
         data.code || "TOOL_ERROR",
-        res.error || "The tool call failed. Try again.",
+        explained.message || explained.fallback || "The tool call failed. Try again.",
         tool,
-        { retryable: data.retryable !== false },
+        { retryable: data.retryable !== false && explained.retryable, steps: explained.steps },
       );
     }
     if (res && res.success === true) return res.data;
     return res;
+  }
+
+  /**
+   * Ask the host which tools this app may call and whether they are ready.
+   * Returns null when the host cannot answer (older hosts, local harness).
+   */
+  async toolStatus() {
+    if (this.demo || !this.host?.tools?.list) return null;
+    try {
+      const res = await this.host.tools.list({});
+      const tools = Array.isArray(res?.tools) ? res.tools : Array.isArray(res) ? res : [];
+      const entry = tools.find((item) => item.tool_id === this.toolId);
+      if (!entry) {
+        return { available: false, status: "missing", tools };
+      }
+      const status = entry.status || "available";
+      return { available: status === "available", status, tools };
+    } catch {
+      return null;
+    }
   }
 
   async callViaHostLlm(tool, args, res) {

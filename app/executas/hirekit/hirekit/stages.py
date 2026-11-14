@@ -215,7 +215,12 @@ def parse_cv(sampler: Sampler, cv_text: str) -> EvidenceBank:
     try:
         bank = EvidenceBank.model_validate(_coerce_evidence_data(data))
     except ValidationError as exc:
-        raise StageError("INVALID_CV_SHAPE", "The CV parser returned an invalid structure.") from exc
+        errors = [
+            f"{'.'.join(str(x) for x in e.get('loc', ['?']))}:{e.get('type', '?')}[{repr(e.get('input'))[:60]}]"
+            for e in exc.errors()[:4]
+        ]
+        detail = "; ".join(errors)
+        raise StageError("INVALID_CV_SHAPE", f"The CV parser returned an unexpected shape ({detail}). Try again.") from exc
     bank = sanitize_evidence(bank, text)
     if not bank.items:
         raise StageError(
@@ -571,10 +576,35 @@ def _clean_json_text(text: str) -> str:
     return text
 
 
+# Keys whose model type is a nested object/model. A `null` here must become
+# `{}` (so Pydantic "missing field" defaults apply), not "".
+_MAP_KEYS = {"contact", "cover_letter", "outreach", "fit", "keyword_coverage"}
+
+
+def _scrub_nulls(node: Any) -> Any:
+    """LLMs occasionally emit `null` for optional fields; every optional string
+    in our models defaults to `""` and every optional object defaults to `{}`,
+    so normalising `null` here keeps `response_format: json_object` output
+    usable without asking the model to be perfect."""
+    if isinstance(node, dict):
+        out = {}
+        for key, value in node.items():
+            if value is None:
+                out[key] = {} if key in _MAP_KEYS else ""
+            else:
+                out[key] = _scrub_nulls(value)
+        return out
+    if isinstance(node, list):
+        return [_scrub_nulls(value) for value in node]
+    if node is None:
+        return ""
+    return node
+
+
 def extract_json(text: str) -> Any:
     cleaned = _clean_json_text(text)
     try:
-        return json.loads(cleaned)
+        return _scrub_nulls(json.loads(cleaned))
     except json.JSONDecodeError as exc:
         raise StageError(
             "MALFORMED_MODEL_JSON",

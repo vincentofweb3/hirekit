@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tool-dev-hirekit"
-version = "0.1.2"
+version = "0.1.5"
 description = "Evidence-first application kit Executa for HireKit"
 requires-python = ">=3.10"
 dependencies = ["pydantic>=2.7,<3"]

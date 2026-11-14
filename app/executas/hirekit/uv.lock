@@ -326,7 +326,7 @@ wheels = [
 
 [[package]]
 name = "tool-dev-hirekit"
-version = "0.1.2"
+version = "0.1.5"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

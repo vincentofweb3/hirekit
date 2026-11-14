@@ -6,6 +6,9 @@ Usage:
     python3 app/scripts/cloud_status.py --reconcile # also ask the platform to
                                                     # re-assert the desired
                                                     # tool state for enabled apps
+    python3 app/scripts/cloud_status.py --install   # (re)install the app on the
+                                                    # agent so its required
+                                                    # Executa is deployed
 
 Never prints the PAT.
 """
@@ -49,6 +52,7 @@ def request(path: str, method: str = "GET", body: dict | None = None):
 
 def main() -> int:
     reconcile = "--reconcile" in sys.argv
+    install = "--install" in sys.argv
 
     status, agents = request("/api/v1/agents")
     print("== Cloud Agent ==")
@@ -77,6 +81,17 @@ def main() -> int:
     print(f"  status={app.get('status')} latest={app.get('latest_version')} "
           f"installable={app.get('installable_version')}")
     print(f"  versions={[v.get('version') for v in app.get('versions', [])]}")
+
+    if install:
+        status, body = request(f"/api/v1/developer/apps/{APP_ID}/install", "POST", {})
+        print("\n== install ==")
+        print(f"  HTTP {status}: {body}")
+        status, installed = request("/api/v1/apps/installed")
+        for app in installed or []:
+            if app.get("slug") == "hirekit":
+                executas = [e.get("tool_id") for e in (app.get("executas") or [])]
+                print(f"  hirekit installed_version={app.get('installed_version')} executas={executas}")
+                print("  -> tool attached" if TOOL_ID in executas else "  -> tool still NOT attached")
 
     if reconcile:
         status, body = request("/api/v1/anna-apps/runtime/executas/reconcile", "POST", {})

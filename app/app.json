@@ -1,7 +1,7 @@
 {
   "slug": "hirekit",
   "name": "HireKit",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "tagline": "Evidence-backed job application kits for technical roles.",
   "description": "HireKit turns a job post and your CV into a job application kit you can defend in an interview. Paste a job and your CV; HireKit extracts job requirements, maps them to evidence in your CV, and shows what is covered, partial, or missing before it writes anything. It produces a fit report, tailored resume bullets tied to CV evidence, a cover letter, recruiter outreach, interview prep, and a gap plan for missing requirements. Every generated line cites CV evidence; if evidence is missing, HireKit asks instead of inventing it. Designed for technical roles (software engineering, infrastructure, data, QA, and related tracks). Includes a tracker for applications and a technical claim-risk review pass. No invented employers, metrics, degrees, titles, dates, or technologies \u2014 if it cannot be traced to your CV, it is removed.",
   "category": "productivity",

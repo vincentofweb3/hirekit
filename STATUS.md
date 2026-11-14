@@ -11,10 +11,12 @@ Current: backend + bundle complete, app published to Anna (app_id=833, `rejected
 - Bundle UI implemented (S1–S7) with storage, theme, responsive 320–2560px; no console errors; 44px touch targets; preview fallback.
 - Linux x86_64 binary built, uploaded and verified on the platform: `app/executas/hirekit/artifacts/hirekit-0.1.2-linux-x86_64.tar.gz` (13.7 MB, sha256 `495c898024e85867618c06efee204d4f740263c5f17529a48af9f8c01e5a45df`, entrypoint `bin/hirekit-tool`, `manifest.json` at archive root). Platform now reports the tool as `distribution_type: binary`, `visibility: app_bundled`, `binary_urls.linux-x86_64` pinned on the CDN.
 - App published to Anna (app_id=833) as `@vincentofweb3/hirekit`; reviewer rejected v0.1.0 for missing Linux binary and incomplete listing.
+- v0.1.7 cuts the review fix: robust guard for LLM `null` → empty-string coercion across models (this is what caused the `executa_unavailable` / `string_type` errors the reviewer saw); Linux binary rebuilt and re-uploaded; full five-stage pipeline proven working on the Cloud Agent (fit 69, 4 bullets, verifier gap questions injected).
 - v0.1.2/0.1.3/0.1.4 changes: binary distribution `active`, root-level archive, listing logo + 5 screenshots + expanded About uploaded via `anna-app apps sync-meta`; `ui.host_api.tools` whitelist restored; v0.1.4 translates platform error codes into plain-language fixes, checks tool readiness with `tools.list` before a build, and adds `app/scripts/cloud_status.py` (reads Cloud Agent + install state, never prints the PAT).
 - GitHub repo public: https://github.com/vincentofweb3/hirekit
 
 ## In progress
+- Cloud Agent full-flow testing confirmed working on v0.1.7; resubmit for review next.
 - **Cloud Agent fresh-install test for v0.1.4.** Root cause of the `permission_denied` error is not the manifest: the Executa is published correctly, but the installed app instance has `executas: []` because the Cloud Agent was `suspended` when the install ran, so the platform's tool deployment never happened and `executa/reconcile` answers `agent_unavailable`. Fix: wake the Cloud Agent, reinstall/repair the draft, then confirm with `python3 app/scripts/cloud_status.py`.
 - Re-submit for review (`anna-app apps submit-review hirekit`) once the Cloud Agent run passes; `release` is blocked until an admin approves.
 

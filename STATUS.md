@@ -1,26 +1,27 @@
 # STATUS: HireKit
-Last updated: 2026-11-06 UTC
+Last updated: 2026-11-14 UTC
 
 ## Gate
-Current: Phase 1 backend core implemented, bundle UI verified, Anna Dev app published (v0.1.0 rejected, v0.1.1 pending resubmission). G1 already passed; focus is review acceptance.
+Current: backend + bundle complete, app published to Anna (app_id=833, `rejected` after the first review). v0.1.4 cut with the Linux binary, the full listing and actionable errors; waiting on a Cloud Agent fresh-install run before resubmitting.
 
 ## Done
 - Inbox and plan files read; Anna platform research done (forum threads 205, 228, 238, 316, 351, 372; docs for apps/manifest/storage/sampling/mobile/binary).
 - Executa protocol v2 plugin with five tools (`parse_cv`, `parse_job`, `match`, `generate`, `verify`) plus `ping`; sampling metadata echo; structured errors; `llm.complete` fallback implemented.
 - Taxonomy 510 entries; scoring, lint, honesty enforcement; 24 pytest tests pass; `anna-app validate --strict` passes.
 - Bundle UI implemented (S1–S7) with storage, theme, responsive 320–2560px; no console errors; 44px touch targets; preview fallback.
-- Linux x86_64 binary built and archived (`hirekit-0.1.1-linux-x86_64.tar.gz`) with root-level `manifest.json` + `bin/hirekit-tool`; works.
+- Linux x86_64 binary built, uploaded and verified on the platform: `app/executas/hirekit/artifacts/hirekit-0.1.2-linux-x86_64.tar.gz` (13.7 MB, sha256 `495c898024e85867618c06efee204d4f740263c5f17529a48af9f8c01e5a45df`, entrypoint `bin/hirekit-tool`, `manifest.json` at archive root). Platform now reports the tool as `distribution_type: binary`, `visibility: app_bundled`, `binary_urls.linux-x86_64` pinned on the CDN.
 - App published to Anna (app_id=833) as `@vincentofweb3/hirekit`; reviewer rejected v0.1.0 for missing Linux binary and incomplete listing.
-- v0.1.1 changes: binary distribution `active`, root-level archive, listing logo/screenshots/description uploaded via `anna-app apps sync-meta`.
+- v0.1.2/0.1.3/0.1.4 changes: binary distribution `active`, root-level archive, listing logo + 5 screenshots + expanded About uploaded via `anna-app apps sync-meta`; `ui.host_api.tools` whitelist restored; v0.1.4 translates platform error codes into plain-language fixes, checks tool readiness with `tools.list` before a build, and adds `app/scripts/cloud_status.py` (reads Cloud Agent + install state, never prints the PAT).
 - GitHub repo public: https://github.com/vincentofweb3/hirekit
 
 ## In progress
-- Clean up STATUS/process notes for accuracy before further review.
-- Re-cut and re-submit v0.1.1 for review (requires Cloud Agent test first).
+- **Cloud Agent fresh-install test for v0.1.4.** Root cause of the `permission_denied` error is not the manifest: the Executa is published correctly, but the installed app instance has `executas: []` because the Cloud Agent was `suspended` when the install ran, so the platform's tool deployment never happened and `executa/reconcile` answers `agent_unavailable`. Fix: wake the Cloud Agent, reinstall/repair the draft, then confirm with `python3 app/scripts/cloud_status.py`.
+- Re-submit for review (`anna-app apps submit-review hirekit`) once the Cloud Agent run passes; `release` is blocked until an admin approves.
 
 ## Blockers
-- Need a real Cloud Agent test before re-submitting (fresh install, full flow).
-- Reviewer cannot be forced; acceptance is Anna's decision.
+- Need a real Cloud Agent test before re-submitting (fresh install, full flow). Cloud Agent `683e763b674de8-6e9ceffc` reports `cloud_status: suspended`, `is_online: false` — it sleeps when idle and must be woken by starting a chat.
+- Reviewer cannot be forced; acceptance is Anna's decision. `apps release` is refused while status is `rejected` (`submit for review first`).
+- No Vercel/static deploy yet: the bundle is already deployable as a static site (relative paths, OG image, web manifest, robots.txt), but a public static build only has the preview/sample experience — real AI still runs through the Anna host.
 ## Verification answers (V1 to V10): answer + doc link each
 - **V1:** A Qualified App Run does **not** have to go through an Executa. A bundle-only app counts if a signed-in user starts it, it completes the declared primary function, returns a meaningful result, and the activity is verifiable in server-side records; a successful `llm.complete` can qualify. We still route the primary pipeline through the bundled Executa with host sampling (default-on), so the run is server-side and recorded. Links: https://forum.anna.partners/t/founding-builder-buidl-deadline-while-app-review-is-pending-and-mau-counting-for-bundle-only-apps/351 and https://anna.partners/developers/tools/executa-sampling
 - **V2:** Since the October cycle all apps by one builder are one portfolio: users are deduplicated and there is one grant per builder per month. HireKit and StudyForge must stay distinct. Links: https://forum.anna.partners/t/turn-your-ai-agents-apps-into-recurring-monthly-grants-join-the-anna-ai-os-founding-builder-program-up-to-80k-month-pool/205 and https://dorahacks.io/hackathon/2349/detail

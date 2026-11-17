@@ -1,6 +1,6 @@
 {
   "display_name": "HireKit",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Evidence-first application kit pipeline. Parses a CV into an evidence bank, parses a job into requirements, matches them, generates a kit, and verifies every claim against CV evidence.",
   "host_capabilities": [
     "llm.sample"
@@ -136,7 +136,6 @@
     }
   ],
   "runtime": {
-    "type": "uv",
-    "min_version": "0.1.0"
+    "type": "binary"
   }
 }

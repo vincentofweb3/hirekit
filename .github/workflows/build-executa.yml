@@ -1,0 +1,50 @@
+name: Build executa binaries
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - "app/executas/hirekit/**"
+      - ".github/workflows/build-executa.yml"
+      - "app/scripts/build_executa_binary.py"
+
+env:
+  VERSION: "0.1.6"
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            name: darwin-arm64
+          - runner: macos-13
+            name: darwin-x86_64
+          - runner: ubuntu-latest
+            name: linux-x86_64
+          - runner: windows-latest
+            name: windows-x86_64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.13.7"
+
+      - name: Build binary
+        working-directory: .
+        run: python3 app/scripts/build_executa_binary.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hirekit-${{ matrix.name }}
+          path: app/executas/hirekit/artifacts/hirekit-${{ env.VERSION }}-${{ matrix.name }}.*
+          if-no-files-found: error

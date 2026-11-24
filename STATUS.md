@@ -1,8 +1,8 @@
 # STATUS: HireKit
-Last updated: 2026-11-23 UTC
+Last updated: 2026-11-24 UTC
 
 ## Gate
-Current: Executa v0.1.7 (false-gap rescue) is ready; Linux 0.1.7 is built and protocol-tested. App v0.1.8 is still unpublished. Next gate: obtain the macOS 0.1.7 archives, build Windows 0.1.7 via GitHub Actions, publish app 0.1.8, wake the Cloud Agent, install, run the full flow, then submit for review.
+Current: Executa v0.1.7 (false-gap rescue) is ready; Linux 0.1.7 and Windows 0.1.7 are built and verified from CI run 45423003882. App v0.1.8 is still unpublished. Next gate: obtain the macOS 0.1.7 archives, publish app 0.1.8, wake the Cloud Agent, install, run the full flow, then submit for review.
 
 ## Done
 - Inbox and plan files read; Anna platform research done (forum threads 205, 228, 238, 316, 351, 372; docs for apps/manifest/storage/sampling/mobile/binary).
@@ -17,16 +17,14 @@ Current: Executa v0.1.7 (false-gap rescue) is ready; Linux 0.1.7 is built and pr
 - Executa v0.1.7 (2026-11-23): `match_stage` now coerces common LLM near-misses (`id` aliases, dict/list shapes, string evidence IDs, capitalized/yes-no statuses) and deterministically rescues false gaps from the evidence bank. The rescue is conservative: partial only, never covered; it refuses years-of-experience, soft-skill, and production-only claims backed by class projects. The match prompt now requires exact IDs, one match per requirement, and a related-tech search before returning gap.
 - Northwind false-gap regression reproduced the visible bug (fit 16/100; "No verified experience yet" for PostgreSQL/Docker/CI-CD/tests). The same run after the fix returns req_2/4/5/6 partial, req_3/7/8 gap, fit 45/100 Stretch, and a gap plan containing only the genuine gaps.
 - Build script `add_data_sep` now uses the resolved target platform instead of `sys.platform`, so MSYS2/native-Windows builds use `;`.
-- Linux 0.1.7 rebuilt and verified: `app/executas/hirekit/artifacts/hirekit-0.1.7-linux-x86_64.tar.gz` (13,699,706 bytes, sha256 `7bc5392cda3ddcbafdf1d4d9104b2a3ce6cb77330f625272d76d72f7d39459bd`, manifest 0.1.7, entrypoint `bin/hirekit-tool`). Packaged `match` probe returns the rescued Northwind statuses and fit 45; `describe` reports 0.1.7; `health` and `ping` pass.
+- GitHub Actions run 45423003882 (commit `cfda69b`) built Linux and Windows 0.1.7; the macOS jobs were cancelled/unusable. Linux: `app/executas/hirekit/artifacts/hirekit-0.1.7-linux-x86_64.tar.gz` (15,645,490 bytes, sha256 `395f4c6dacb96c6000acf9edf9d7b6d5e2b871f4349693fe88ebbcab53220cc3`, manifest 0.1.7, entrypoint `bin/hirekit-tool`). Windows: `app/executas/hirekit/artifacts/hirekit-0.1.7-windows-x86_64.zip` (14,279,686 bytes, sha256 `e371ac792aa02214759645009fde53decb94fca87cdcfc5a288899ad0eb7444e`, manifest 0.1.7, entrypoint `bin/hirekit-tool.exe`). The packaged Linux `match` probe returns the rescued Northwind statuses and fit 45; `describe` reports 0.1.7; `health` and `ping` pass.
 
 ## In progress
-- Windows 0.1.7: needs a commit + push to trigger `build-executa.yml` (now `VERSION: 0.1.7`) or a manual Windows build. The workflow will upload `hirekit-0.1.7-windows-x86_64.zip`.
 - macOS 0.1.7: friend rebuild needed for both arm64 and x86_64, using the same commands as the 0.1.6 report with 0.1.7 paths. The 0.1.6 macOS archives are not on this machine (only the PDF report was available), so 0.1.6 cannot be completed without them.
 - Once all four archives are in `app/executas/hirekit/artifacts/`: verify checksums/manifests, publish app v0.1.8, wake the Cloud Agent, install/repair, run the full flow, then `anna-app apps submit-review hirekit`.
 
 ## Blockers
 - macOS 0.1.7 archives are not built/available yet; GitHub-hosted macOS jobs were cancelled (no usable macOS runner).
-- Windows 0.1.7 requires a push to trigger CI (or another Windows build environment); no commit has been made in this session.
 - Cloud Agent `683e763b674de8-6e9ceffc` is still suspended (`online=False`, last seen 2026-11-21T01:15:35Z); it must be woken by starting a chat before install/full-flow testing.
 - App 0.1.8 remains unreleased; the last published app is 0.1.7 and the app status is `rejected` until the resubmission is approved.
 - Reviewer cannot be forced; acceptance is Anna's decision. `apps release` is refused while status is `rejected` (`submit for review first`).

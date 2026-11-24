@@ -72,13 +72,9 @@ def main() -> None:
         if p.exists():
             shutil.rmtree(p)
 
-    # Build with PyInstaller
-    add_data_sep = ":" if sys.platform != "win32" else ";"
-    extra_args = []
-    if platform.startswith("windows-"):
-        extra_args.append("--onefile")
-    else:
-        extra_args.append("--onefile")
+    # Build with PyInstaller. Use the resolved target, not sys.platform:
+    # an MSYS2 Python reports a non-win32 platform but PyInstaller is native Windows.
+    add_data_sep = ";" if platform.startswith("windows-") else ":"
 
     build_binary(
         "--onefile",

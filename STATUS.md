@@ -1,27 +1,34 @@
 # STATUS: HireKit
-Last updated: 2026-11-14 UTC
+Last updated: 2026-11-23 UTC
 
 ## Gate
-Current: backend + bundle complete, app published to Anna (app_id=833, `rejected` after the first review). v0.1.4 cut with the Linux binary, the full listing and actionable errors; waiting on a Cloud Agent fresh-install run before resubmitting.
+Current: Executa v0.1.7 (false-gap rescue) is ready; Linux 0.1.7 is built and protocol-tested. App v0.1.8 is still unpublished. Next gate: obtain the macOS 0.1.7 archives, build Windows 0.1.7 via GitHub Actions, publish app 0.1.8, wake the Cloud Agent, install, run the full flow, then submit for review.
 
 ## Done
 - Inbox and plan files read; Anna platform research done (forum threads 205, 228, 238, 316, 351, 372; docs for apps/manifest/storage/sampling/mobile/binary).
 - Executa protocol v2 plugin with five tools (`parse_cv`, `parse_job`, `match`, `generate`, `verify`) plus `ping`; sampling metadata echo; structured errors; `llm.complete` fallback implemented.
-- Taxonomy 510 entries; scoring, lint, honesty enforcement; 24 pytest tests pass; `anna-app validate --strict` passes.
+- Taxonomy 510 entries; scoring, lint, honesty enforcement; 28 pytest tests pass; `anna-app validate --strict` passes.
 - Bundle UI implemented (S1–S7) with storage, theme, responsive 320–2560px; no console errors; 44px touch targets; preview fallback.
 - Linux x86_64 binary built, uploaded and verified on the platform: `app/executas/hirekit/artifacts/hirekit-0.1.2-linux-x86_64.tar.gz` (13.7 MB, sha256 `495c898024e85867618c06efee204d4f740263c5f17529a48af9f8c01e5a45df`, entrypoint `bin/hirekit-tool`, `manifest.json` at archive root). Platform now reports the tool as `distribution_type: binary`, `visibility: app_bundled`, `binary_urls.linux-x86_64` pinned on the CDN.
 - App published to Anna (app_id=833) as `@vincentofweb3/hirekit`; reviewer rejected v0.1.0 for missing Linux binary and incomplete listing.
-- v0.1.7 cuts the review fix: robust guard for LLM `null` → empty-string coercion across models (this is what caused the `executa_unavailable` / `string_type` errors the reviewer saw); Linux binary rebuilt and re-uploaded; full five-stage pipeline proven working on the Cloud Agent (fit 69, 4 bullets, verifier gap questions injected).
+- App v0.1.7 cuts the review fix: robust guard for LLM `null` → empty-string coercion across models (this is what caused the `executa_unavailable` / `string_type` errors the reviewer saw); Linux binary rebuilt and re-uploaded; full five-stage pipeline proven working on the Cloud Agent (fit 69, 4 bullets, verifier gap questions injected).
 - v0.1.2/0.1.3/0.1.4 changes: binary distribution `active`, root-level archive, listing logo + 5 screenshots + expanded About uploaded via `anna-app apps sync-meta`; `ui.host_api.tools` whitelist restored; v0.1.4 translates platform error codes into plain-language fixes, checks tool readiness with `tools.list` before a build, and adds `app/scripts/cloud_status.py` (reads Cloud Agent + install state, never prints the PAT).
 - GitHub repo public: https://github.com/vincentofweb3/hirekit
+- Executa v0.1.7 (2026-11-23): `match_stage` now coerces common LLM near-misses (`id` aliases, dict/list shapes, string evidence IDs, capitalized/yes-no statuses) and deterministically rescues false gaps from the evidence bank. The rescue is conservative: partial only, never covered; it refuses years-of-experience, soft-skill, and production-only claims backed by class projects. The match prompt now requires exact IDs, one match per requirement, and a related-tech search before returning gap.
+- Northwind false-gap regression reproduced the visible bug (fit 16/100; "No verified experience yet" for PostgreSQL/Docker/CI-CD/tests). The same run after the fix returns req_2/4/5/6 partial, req_3/7/8 gap, fit 45/100 Stretch, and a gap plan containing only the genuine gaps.
+- Build script `add_data_sep` now uses the resolved target platform instead of `sys.platform`, so MSYS2/native-Windows builds use `;`.
+- Linux 0.1.7 rebuilt and verified: `app/executas/hirekit/artifacts/hirekit-0.1.7-linux-x86_64.tar.gz` (13,699,706 bytes, sha256 `7bc5392cda3ddcbafdf1d4d9104b2a3ce6cb77330f625272d76d72f7d39459bd`, manifest 0.1.7, entrypoint `bin/hirekit-tool`). Packaged `match` probe returns the rescued Northwind statuses and fit 45; `describe` reports 0.1.7; `health` and `ping` pass.
 
 ## In progress
-- Cloud Agent full-flow testing confirmed working on v0.1.7; resubmit for review next.
-- **Cloud Agent fresh-install test for v0.1.4.** Root cause of the `permission_denied` error is not the manifest: the Executa is published correctly, but the installed app instance has `executas: []` because the Cloud Agent was `suspended` when the install ran, so the platform's tool deployment never happened and `executa/reconcile` answers `agent_unavailable`. Fix: wake the Cloud Agent, reinstall/repair the draft, then confirm with `python3 app/scripts/cloud_status.py`.
-- Re-submit for review (`anna-app apps submit-review hirekit`) once the Cloud Agent run passes; `release` is blocked until an admin approves.
+- Windows 0.1.7: needs a commit + push to trigger `build-executa.yml` (now `VERSION: 0.1.7`) or a manual Windows build. The workflow will upload `hirekit-0.1.7-windows-x86_64.zip`.
+- macOS 0.1.7: friend rebuild needed for both arm64 and x86_64, using the same commands as the 0.1.6 report with 0.1.7 paths. The 0.1.6 macOS archives are not on this machine (only the PDF report was available), so 0.1.6 cannot be completed without them.
+- Once all four archives are in `app/executas/hirekit/artifacts/`: verify checksums/manifests, publish app v0.1.8, wake the Cloud Agent, install/repair, run the full flow, then `anna-app apps submit-review hirekit`.
 
 ## Blockers
-- Need a real Cloud Agent test before re-submitting (fresh install, full flow). Cloud Agent `683e763b674de8-6e9ceffc` reports `cloud_status: suspended`, `is_online: false` — it sleeps when idle and must be woken by starting a chat.
+- macOS 0.1.7 archives are not built/available yet; GitHub-hosted macOS jobs were cancelled (no usable macOS runner).
+- Windows 0.1.7 requires a push to trigger CI (or another Windows build environment); no commit has been made in this session.
+- Cloud Agent `683e763b674de8-6e9ceffc` is still suspended (`online=False`, last seen 2026-11-21T01:15:35Z); it must be woken by starting a chat before install/full-flow testing.
+- App 0.1.8 remains unreleased; the last published app is 0.1.7 and the app status is `rejected` until the resubmission is approved.
 - Reviewer cannot be forced; acceptance is Anna's decision. `apps release` is refused while status is `rejected` (`submit for review first`).
 - No Vercel/static deploy yet: the bundle is already deployable as a static site (relative paths, OG image, web manifest, robots.txt), but a public static build only has the preview/sample experience — real AI still runs through the Anna host.
 ## Verification answers (V1 to V10): answer + doc link each

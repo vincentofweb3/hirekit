@@ -108,6 +108,259 @@ def _quote_supported(quote: str, cv_text: str) -> bool:
     return _token_overlap(quote, cv_text) >= 0.85
 
 
+_STOPWORDS = frozenset(
+    """
+    a an and are as at be been being but by can could did do does doing for from
+    had has have having if in into is it its of on or our shall should so than
+    that the their them then there these they this those to was we were what
+    when where which while who will with would you your
+    """.split()
+)
+_GENERIC_PRACTICE_TOKENS = frozenset(
+    """
+    build create design develop experience familiar good hands knowledge plus
+    proficient proficiency ship skill skills strong use used using work working
+    write
+    """.split()
+)
+_STRONG_RELATIONS = {
+    frozenset({"CI/CD", "GitHub Actions"}),
+    frozenset({"CI/CD", "GitLab CI"}),
+    frozenset({"CI/CD", "Jenkins"}),
+    frozenset({"CI/CD", "CircleCI"}),
+    frozenset({"CI/CD", "Argo CD"}),
+    frozenset({"PostgreSQL", "SQL"}),
+    frozenset({"Docker", "Kubernetes"}),
+    frozenset({"Node.js", "Express"}),
+    frozenset({"Jest", "Vitest"}),
+    frozenset({"AWS", "GCP"}),
+    frozenset({"AWS", "Azure"}),
+    frozenset({"GCP", "Azure"}),
+}
+_YEARS_RE = re.compile(r"\b\d+\s*(?:\+|plus)?\s*(?:years?|yrs?)\b", re.IGNORECASE)
+_PRODUCTION_RE = re.compile(
+    r"\b(?:production|professional|industry|commercial)\b", re.IGNORECASE
+)
+_STATUS_ALIASES = {
+    "yes": "covered",
+    "strong": "covered",
+    "no": "gap",
+    "none": "gap",
+    "missing": "gap",
+    "weak": "partial",
+    "some": "partial",
+}
+_MATCH_ID_RE = re.compile(r"^(?:req(?:uirement)?[\s_-]*)(\d+)$", re.IGNORECASE)
+_IRREGULAR_STEMS = {
+    "built": "build",
+    "wrote": "write",
+    "written": "write",
+    "ran": "run",
+    "led": "lead",
+    "made": "make",
+    "shipped": "ship",
+    "taught": "teach",
+    "won": "win",
+}
+
+
+def _stem(token: str) -> str:
+    if token in _IRREGULAR_STEMS:
+        return _IRREGULAR_STEMS[token]
+    if token.endswith("ies") and len(token) > 4:
+        return token[:-3] + "y"
+    if token.endswith("ing") and len(token) > 5:
+        return token[:-3]
+    if token.endswith("ed") and len(token) > 4:
+        return token[:-2]
+    if token.endswith("es") and len(token) > 4:
+        return token[:-2]
+    if token.endswith("s") and len(token) > 3 and not token.endswith("ss"):
+        return token[:-1]
+    return token
+
+
+def _content_tokens(text: str) -> set[str]:
+    tokens = re.findall(r"[a-z0-9+#]+", text.lower())
+    return {
+        _stem(token)
+        for token in tokens
+        if token in {"c", "r"} or (len(token) > 1 and token not in _STOPWORDS)
+    }
+
+
+def _match_key(value: str) -> str:
+    value = value.strip()
+    if value.isdigit():
+        return f"req_{int(value)}"
+    match = _MATCH_ID_RE.match(value)
+    if match:
+        return f"req_{int(match.group(1))}"
+    return value.lower()
+
+
+def _coerce_match_data(data: Any) -> dict[str, Any]:
+    """Accept the common LLM near-misses without failing the whole stage."""
+    if isinstance(data, list):
+        data = {"matches": data}
+    if not isinstance(data, dict):
+        raise StageError("MALFORMED_MODEL_JSON", "The matcher returned an invalid shape.")
+    for key in ("match", "results", "requirement_matches"):
+        if isinstance(data.get(key), list) and not isinstance(data.get("matches"), list):
+            data = {**data, "matches": data[key]}
+            break
+    matches = data.get("matches")
+    if isinstance(matches, dict):
+        matches = [
+            {"requirement_id": key, **value} if isinstance(value, dict) else value
+            for key, value in matches.items()
+        ]
+        data = {**data, "matches": matches}
+    if not isinstance(matches, list):
+        return data
+    cleaned: list[dict[str, Any]] = []
+    for raw in matches:
+        if not isinstance(raw, dict):
+            continue
+        raw = dict(raw)
+        if not raw.get("requirement_id"):
+            for key in ("id", "requirement", "req_id", "requirementId", "requirementID"):
+                if raw.get(key) not in (None, ""):
+                    raw["requirement_id"] = raw[key]
+                    break
+        requirement_id = raw.get("requirement_id")
+        if isinstance(requirement_id, (int, float)):
+            raw["requirement_id"] = str(int(requirement_id))
+        status = raw.get("status")
+        if status is None:
+            raw["status"] = "gap"
+        elif isinstance(status, str):
+            status = status.strip().lower()
+            raw["status"] = _STATUS_ALIASES.get(status, status)
+        evidence_ids = raw.get(
+            "evidence_ids", raw.get("evidenceIds", raw.get("evidence"))
+        )
+        if isinstance(evidence_ids, str):
+            evidence_ids = [evidence_ids]
+        elif not isinstance(evidence_ids, list):
+            evidence_ids = []
+        raw["evidence_ids"] = [str(eid) for eid in evidence_ids if eid is not None]
+        if raw.get("rationale") is None:
+            raw["rationale"] = ""
+        cleaned.append(raw)
+    return {**data, "matches": cleaned}
+
+
+def _rescue_gap(req: Requirement, evidence: EvidenceBank) -> Match | None:
+    """Recover a false gap when the evidence clearly supports the requirement.
+
+    The LLM matcher is allowed to be cautious, but it sometimes returns gap for
+    requirements whose exact keyword is in the evidence bank. Keep the recovery
+    conservative: partial, never covered, and never for years/degree/soft-skill
+    or production-only requirements backed by a class project.
+    """
+    if not req.text.strip() or not evidence.items:
+        return None
+    if req.category == "soft":
+        return None
+    if _YEARS_RE.search(req.text):
+        return None
+    production_only = bool(_PRODUCTION_RE.search(req.text))
+    req_tokens = _content_tokens(req.text)
+    if not req_tokens:
+        return None
+    keyword_tech: set[str] = set()
+    for keyword in req.keywords:
+        keyword_tech.update(find_technologies(keyword))
+    related_tech: set[str] = set()
+    for keyword in req.keywords:
+        related_tech.update(related(keyword))
+
+    candidates: list[tuple[float, int, str, str]] = []
+    for item in evidence.items:
+        if production_only and item.type not in {"experience", "leadership", "volunteering"}:
+            continue
+        text = evidence_text(item)
+        item_tokens = _content_tokens(text)
+        if not item_tokens:
+            continue
+        overlap = len(req_tokens & item_tokens) / len(req_tokens)
+        item_tech = find_technologies(text)
+        exact = sorted(keyword_tech & item_tech)
+        related_hits = sorted(related_tech & item_tech)
+        strong = any(
+            frozenset({canonical(keyword), hit}) in _STRONG_RELATIONS
+            for keyword in req.keywords
+            for hit in related_hits
+        )
+        keyword_overlap = (
+            sum(
+                1
+                for keyword in req.keywords
+                if _content_tokens(keyword) & item_tokens
+            )
+            / len(req.keywords)
+            if req.keywords
+            else 0.0
+        )
+        scope = {
+            "project": "a project",
+            "experience": "a role",
+            "education": "education",
+            "skill": "a skills list",
+            "leadership": "a leadership role",
+            "award": "an award",
+            "volunteering": "volunteering",
+        }.get(item.type, "the CV")
+        rationale = ""
+        if exact and overlap >= 0.5:
+            rationale = (
+                f"The CV names {', '.join(exact)} in {scope}; "
+                "marked partial, not covered."
+            )
+        elif related_hits and (overlap >= 0.33 or strong):
+            rationale = (
+                f"Related evidence ({', '.join(related_hits)}) exists, but the exact "
+                f"requirement ({', '.join(req.keywords)}) is not named; marked partial."
+            )
+        elif (
+            req.category == "practice"
+            and keyword_overlap >= 0.5
+            and overlap >= 0.25
+            and (req_tokens & item_tokens) - _GENERIC_PRACTICE_TOKENS
+        ):
+            rationale = "The CV has related practice evidence; marked partial, not covered."
+        elif (
+            req.category in _TECH_CATEGORIES
+            and keyword_overlap >= 0.5
+            and overlap >= 0.5
+        ):
+            rationale = (
+                "The CV has related evidence for this requirement; marked partial, not covered."
+            )
+        elif req.category == "practice" and overlap >= 0.5:
+            rationale = "The CV has related practice evidence; marked partial, not covered."
+        if rationale:
+            candidates.append(
+                (overlap, len(exact) + len(related_hits), item.id, rationale)
+            )
+    if not candidates:
+        return None
+    candidates.sort(key=lambda candidate: (candidate[0], candidate[1]), reverse=True)
+    top = candidates[0]
+    evidence_ids = [
+        candidate[2]
+        for candidate in candidates
+        if (candidate[0], candidate[1]) == (top[0], top[1])
+    ][:2]
+    return Match(
+        requirement_id=req.id,
+        status="partial",
+        evidence_ids=evidence_ids,
+        rationale=top[3],
+    )
+
+
 def _numbers(text: str) -> set[str]:
     return set(re.findall(r"\d[\d,.]*", text))
 
@@ -331,27 +584,44 @@ def _downgrade_match(
 def match_stage(
     sampler: Sampler, job: JobRequirements, evidence: EvidenceBank
 ) -> MatchResult:
-    data = sample_json(
-        sampler,
-        prompts.match(job.model_dump(), evidence.model_dump()),
-        max_tokens=3072,
+    data = _coerce_match_data(
+        sample_json(
+            sampler,
+            prompts.match(job.model_dump(), evidence.model_dump()),
+            max_tokens=3072,
+        )
     )
     try:
         result = MatchResult.model_validate(data)
     except ValidationError as exc:
-        raise StageError("INVALID_MATCH_SHAPE", "The matcher returned an invalid structure.") from exc
+        valid: list[Match] = []
+        raw_matches = data.get("matches", []) if isinstance(data, dict) else []
+        for raw in raw_matches:
+            try:
+                valid.append(Match.model_validate(raw))
+            except ValidationError:
+                continue
+        if not valid and raw_matches:
+            raise StageError(
+                "INVALID_MATCH_SHAPE", "The matcher returned an invalid structure."
+            ) from exc
+        result = MatchResult(matches=valid)
 
-    by_req = result.by_requirement()
+    by_req = {_match_key(match.requirement_id): match for match in result.matches}
     matches: list[Match] = []
     for req in job.requirements:
-        match = by_req.get(req.id) or Match(
+        match = by_req.get(_match_key(req.id)) or Match(
             requirement_id=req.id,
             status="gap",
-            rationale="No match was returned for this requirement.",
+            rationale="No verified evidence for this requirement.",
         )
+        match.requirement_id = req.id
         match = _downgrade_match(req, match, evidence)
         if match.status == "gap":
             match.evidence_ids = []
+            rescued = _rescue_gap(req, evidence)
+            if rescued is not None:
+                match = rescued
         matches.append(match)
     result.matches = matches
 

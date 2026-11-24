@@ -150,6 +150,379 @@ def test_match_downgrades_unsupported_claims():
     assert result.fit.band in {"Long shot", "Stretch", "Good fit", "Strong fit"}
 
 
+def _northwind_bank() -> EvidenceBank:
+    return EvidenceBank(
+        items=[
+            EvidenceItem(
+                id="ev_2",
+                type="project",
+                title="Campus Marketplace API",
+                facts=[
+                    "Designed a 9-table PostgreSQL schema.",
+                    "Reached 74% test coverage.",
+                    "Deployed on a free-tier VPS.",
+                ],
+                skills=[
+                    "Node.js",
+                    "Express",
+                    "PostgreSQL",
+                    "Jest",
+                    "Docker",
+                    "GitHub Actions",
+                ],
+                stack=[
+                    "Node.js",
+                    "Express",
+                    "PostgreSQL",
+                    "Jest",
+                    "Docker",
+                    "GitHub Actions",
+                ],
+                source_quote=(
+                    "Campus Marketplace API (Node.js, Express, PostgreSQL, Jest, Docker, "
+                    "GitHub Actions): designed a 9-table PostgreSQL schema, built the REST "
+                    "layer, implemented auth with JWT, reached 74% test coverage, and "
+                    "deployed on a free-tier VPS."
+                ),
+                verified_quote=True,
+            ),
+            EvidenceItem(
+                id="ev_3",
+                type="project",
+                title="Resume Tailor",
+                facts=[
+                    "Built a script that scores job descriptions against structured CV data."
+                ],
+                skills=["Python", "Pydantic", "PostgreSQL"],
+                stack=["Python", "Pydantic", "PostgreSQL"],
+                source_quote=(
+                    "Resume Tailor (Python, Pydantic, PostgreSQL): built a script that scores "
+                    "job descriptions against structured CV data and generates evidence-linked "
+                    "bullet suggestions."
+                ),
+                verified_quote=True,
+            ),
+            EvidenceItem(
+                id="ev_5",
+                type="experience",
+                title="Teaching assistant",
+                facts=["Created three regression test suites."],
+                source_quote=(
+                    "Teaching assistant, computer science department: ran weekly lab sessions, "
+                    "reviewed student code submissions, and created three regression test suites."
+                ),
+                verified_quote=True,
+            ),
+            EvidenceItem(
+                id="ev_6",
+                type="skill",
+                title="Technical Skills",
+                skills=[
+                    "Node.js",
+                    "Express",
+                    "Python",
+                    "PostgreSQL",
+                    "REST APIs",
+                    "Docker",
+                    "Git",
+                    "GitHub Actions",
+                    "Jest",
+                    "Linux",
+                ],
+                source_quote=(
+                    "Node.js, Express, Python, PostgreSQL, REST APIs, Docker, Git, GitHub "
+                    "Actions, Jest, Linux"
+                ),
+                verified_quote=True,
+            ),
+        ]
+    )
+
+
+def _northwind_job() -> JobRequirements:
+    return JobRequirements(
+        title="Software Engineer",
+        company="Northwind Payments",
+        requirements=[
+            Requirement(
+                id="req_1",
+                text="Python proficiency",
+                kind="must",
+                category="language",
+                keywords=["Python"],
+            ),
+            Requirement(
+                id="req_2",
+                text="Design PostgreSQL schemas",
+                kind="must",
+                category="database",
+                keywords=["PostgreSQL"],
+            ),
+            Requirement(
+                id="req_3",
+                text="Tune slow queries",
+                kind="must",
+                category="database",
+                keywords=["PostgreSQL"],
+            ),
+            Requirement(
+                id="req_4",
+                text="Ship with Docker",
+                kind="must",
+                category="infra",
+                keywords=["Docker"],
+            ),
+            Requirement(
+                id="req_5",
+                text="Ship with CI/CD",
+                kind="must",
+                category="infra",
+                keywords=["CI/CD"],
+            ),
+            Requirement(
+                id="req_6",
+                text="Write unit and integration tests",
+                kind="must",
+                category="practice",
+                keywords=["unit tests", "integration tests"],
+            ),
+            Requirement(
+                id="req_7",
+                text="Kafka or RabbitMQ",
+                kind="nice",
+                category="infra",
+                keywords=["Kafka", "RabbitMQ"],
+            ),
+            Requirement(
+                id="req_8",
+                text="AWS or GCP",
+                kind="nice",
+                category="infra",
+                keywords=["AWS", "GCP"],
+            ),
+        ],
+        keywords=[
+            "Python",
+            "PostgreSQL",
+            "Docker",
+            "CI/CD",
+            "unit tests",
+            "integration tests",
+            "Kafka",
+            "RabbitMQ",
+            "AWS",
+            "GCP",
+        ],
+    )
+
+
+def test_match_rescues_false_gaps_without_inventing_coverage():
+    payload = {
+        "matches": [
+            {
+                "requirement_id": "req_1",
+                "status": "covered",
+                "evidence_ids": ["ev_3"],
+                "rationale": "Python script.",
+            },
+            {
+                "requirement_id": "req_2",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No schema design.",
+            },
+            {
+                "requirement_id": "req_3",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No query tuning.",
+            },
+            # req_4 is intentionally omitted: the fallback must still find Docker.
+            {
+                "requirement_id": "req_5",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No CI/CD.",
+            },
+            {
+                "requirement_id": "req_6",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No tests.",
+            },
+            {
+                "requirement_id": "req_7",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No queues.",
+            },
+            {
+                "requirement_id": "req_8",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No cloud.",
+            },
+        ]
+    }
+    result = stages.match_stage(MockSampler(payload), _northwind_job(), _northwind_bank())
+    by_req = {match.requirement_id: match for match in result.matches}
+    assert {req_id: match.status for req_id, match in by_req.items()} == {
+        "req_1": "covered",
+        "req_2": "partial",
+        "req_3": "gap",
+        "req_4": "partial",
+        "req_5": "partial",
+        "req_6": "partial",
+        "req_7": "gap",
+        "req_8": "gap",
+    }
+    assert by_req["req_2"].evidence_ids == ["ev_2"]
+    assert set(by_req["req_4"].evidence_ids) == {"ev_2", "ev_6"}
+    assert set(by_req["req_5"].evidence_ids) == {"ev_2", "ev_6"}
+    assert set(by_req["req_6"].evidence_ids) == {"ev_2", "ev_5"}
+    assert "PostgreSQL" in by_req["req_2"].rationale
+    assert "GitHub Actions" in by_req["req_5"].rationale
+    assert all(
+        match.status != "partial" or match.rationale for match in result.matches
+    )
+    assert "No verified evidence" not in by_req["req_4"].rationale
+    assert result.fit.score == 45
+    assert result.fit.band == "Stretch"
+
+
+def test_match_rescue_respects_years_and_production_guards():
+    bank = EvidenceBank(
+        items=[
+            EvidenceItem(
+                id="ev_1",
+                type="project",
+                title="Campus API",
+                facts=["Built a Python API with Docker."],
+                skills=["Python", "Docker"],
+                stack=["Python", "Docker"],
+                source_quote="Built a Python API with Docker.",
+                verified_quote=True,
+            ),
+            EvidenceItem(
+                id="ev_2",
+                type="experience",
+                title="Platform intern",
+                facts=["Shipped Docker containers to production."],
+                skills=["Docker"],
+                stack=["Docker"],
+                source_quote="Shipped Docker containers to production.",
+                verified_quote=True,
+            ),
+        ]
+    )
+    job = _job(
+        Requirement(
+            id="req_1",
+            text="5+ years of Python",
+            kind="must",
+            category="language",
+            keywords=["Python"],
+        ),
+        Requirement(
+            id="req_2",
+            text="Production Docker experience",
+            kind="must",
+            category="infra",
+            keywords=["Docker"],
+        ),
+    )
+    payload = {
+        "matches": [
+            {
+                "requirement_id": "req_1",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "Not enough years.",
+            },
+            {
+                "requirement_id": "req_2",
+                "status": "gap",
+                "evidence_ids": [],
+                "rationale": "No production evidence.",
+            },
+        ]
+    }
+    result = stages.match_stage(MockSampler(payload), job, bank)
+    by_req = {match.requirement_id: match for match in result.matches}
+    assert by_req["req_1"].status == "gap"
+    assert by_req["req_2"].status == "partial"
+    assert by_req["req_2"].evidence_ids == ["ev_2"]
+
+
+def test_match_coerces_aliased_ids_and_statuses():
+    bank = _bank()
+    job = _job(
+        Requirement(
+            id="req_1",
+            text="Python",
+            kind="must",
+            category="language",
+            keywords=["Python"],
+        ),
+        Requirement(
+            id="req_2",
+            text="Kubernetes",
+            kind="must",
+            category="infra",
+            keywords=["Kubernetes"],
+        ),
+    )
+    payload = {
+        "matches": {
+            "1": {
+                "status": "Covered",
+                "evidence_ids": "ev_1",
+                "rationale": "Python API.",
+            },
+            "requirement-2": {"status": "NO", "rationale": "No Kubernetes."},
+        }
+    }
+    result = stages.match_stage(MockSampler(payload), job, bank)
+    by_req = {match.requirement_id: match for match in result.matches}
+    assert by_req["req_1"].status == "covered"
+    assert by_req["req_1"].evidence_ids == ["ev_1"]
+    assert by_req["req_2"].status == "gap"
+
+
+def test_match_salvages_valid_rows_from_partial_json():
+    bank = _bank()
+    job = _job(
+        Requirement(
+            id="req_1",
+            text="Python",
+            kind="must",
+            category="language",
+            keywords=["Python"],
+        ),
+        Requirement(
+            id="req_2",
+            text="Kubernetes",
+            kind="must",
+            category="infra",
+            keywords=["Kubernetes"],
+        ),
+    )
+    payload = {
+        "matches": [
+            {
+                "requirement_id": "req_1",
+                "status": "covered",
+                "evidence_ids": ["ev_1"],
+            },
+            {"requirement_id": "req_2", "status": "maybe", "evidence_ids": []},
+        ]
+    }
+    result = stages.match_stage(MockSampler(payload), job, bank)
+    by_req = {match.requirement_id: match for match in result.matches}
+    assert by_req["req_1"].status == "covered"
+    assert by_req["req_2"].status == "gap"
+
+
 def test_fit_score_formula_and_bands():
     bank = _bank()
     job = _job(

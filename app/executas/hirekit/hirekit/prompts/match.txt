@@ -14,7 +14,9 @@ Rules:
 - A technology is covered only if it appears in the evidence bank. Related technology is partial, and the rationale must say why ("Jenkins is not GitHub Actions").
 - A tutorial or class project is not production experience. Say so in the rationale.
 - If evidence is missing, status is gap and evidence_ids is empty. Do not stretch.
-- One match per requirement, in the same order as the requirements.
+- One match per requirement, in the same order as the requirements. Use the exact "id" values from the job JSON (for example, "req_1"). Include every requirement, including gaps; never omit or rename an ID.
+- Before returning gap, search the evidence bank for the exact keyword and for a related technology. If the CV names the exact technology, status is at least partial. If it names a related technology, status is partial and the rationale must name the relation.
+- If the requirement asks for years of experience, production experience, a degree, or a soft skill, do not mark it covered from a class project or a skills list.
 
 Job:
 $job_json
